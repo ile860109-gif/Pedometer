@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>員工步數上傳系統</title>
+    <script
+      charset="utf-8"
+      src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+    ></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 350px;
+      }
+      h2 {
+        color: #00b900;
+        text-align: center;
+      }
+      .profile {
+        display: flex;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .profile img {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 2px solid #00b900;
+      }
+      .form-item {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        background: #00b900;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      button:disabled {
+        background: #ccc;
+      }
+      #status {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>步數紀錄</h2>
+
+      <div id="loadingUI" style="text-align: center">LINE 載入中...</div>
+
+      <div id="mainUI" style="display: none">
+        <div class="profile">
+          <img id="userImg" src="" alt="" />
+          <div>
+            <div id="userNameTxt" style="font-weight: bold"></div>
+            <div style="font-size: 12px; color: #888">已透過 LINE 驗證</div>
+          </div>
+        </div>
+
+        <div class="form-item">
+          <label>確認姓名</label>
+          <input type="text" id="inputName" />
+        </div>
+
+        <div class="form-item">
+          <label>員工編號</label>
+          <input type="text" id="inputStaffId" placeholder="輸入員編" />
+        </div>
+
+        <div class="form-item">
+          <label>今日步數</label>
+          <input
+            type="number"
+            id="inputSteps"
+            inputmode="numeric"
+            placeholder="請輸入數字"
+          />
+        </div>
+
+        <button id="sendBtn" onclick="handleFormSubmit()">送出紀錄</button>
+        <div id="status"></div>
+      </div>
+    </div>
+
+    <script>
+      // --- 配置資訊 ---
+      const CONFIG = {
+        LIFF_ID: "將你的LIFF_ID貼在這裡",
+        GAS_URL: "將你的GAS部署網址貼在這裡",
+      };
+
+      let currentUser = { userId: "" };
+
+      async function init() {
+        try {
+          await liff.init({ liffId: CONFIG.LIFF_ID });
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+          const profile = await liff.getProfile();
+          currentUser.userId = profile.userId;
+
+          // UI 渲染
+          document.getElementById("userImg").src = profile.pictureUrl;
+          document.getElementById("userNameTxt").innerText =
+            profile.displayName;
+          document.getElementById("inputName").value = profile.displayName;
+          document.getElementById("inputStaffId").value =
+            localStorage.getItem("last_staff_id") || "";
+
+          document.getElementById("loadingUI").style.display = "none";
+          document.getElementById("mainUI").style.display = "block";
+        } catch (err) {
+          document.getElementById("loadingUI").innerText = "LIFF 初始化失敗";
+        }
+      }
+
+      async function handleFormSubmit() {
+        const name = document.getElementById("inputName").value;
+        const staffId = document.getElementById("inputStaffId").value;
+        const steps = document.getElementById("inputSteps").value;
+        const btn = document.getElementById("sendBtn");
+        const status = document.getElementById("status");
+
+        if (!name || !staffId || !steps) {
+          alert("請填寫完整資訊");
+          return;
+        }
+
+        btn.disabled = true;
+        status.innerText = "上傳中...";
+        localStorage.setItem("last_staff_id", staffId);
+
+        const data = {
+          userId: currentUser.userId,
+          userName: name,
+          staffId: staffId,
+          steps: steps,
+        };
+
+        try {
+          // 使用 no-cors 是 GAS 聯動最穩定的方式
+          await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          status.innerText = "上傳完成！";
+          alert("感謝提交，祝您健康！");
+          liff.closeWindow();
+        } catch (e) {
+          alert("上傳發生錯誤，請稍後再試");
+          btn.disabled = false;
+          status.innerText = "";
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
