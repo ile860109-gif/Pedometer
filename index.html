@@ -112,6 +112,7 @@
         <div class="form-item">
           <label>確認姓名</label>
           <input type="text" id="inputName" />
+          <div class="hint" id="nameHint">首次輸入後會自動綁定姓名</div>
         </div>
 
         <div class="form-item">
@@ -140,7 +141,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbzi7n5dK5kd8dm28PYl3D6PyOxSZGNlHXXtQ1_3KdutAISwe6RPBHOh4-KZMx29JYnD/exec",
+          "https://script.google.com/macros/s/AKfycbwc4Uo5kFcxBqtTMmWkW99fKwt6OgzsH6LsQnqnDnZzgba7pjaTxH4DIn_HNDxl2e6E/exec",
       };
 
       let currentUser = { userId: "" };
@@ -180,8 +181,17 @@
           const resData = await getBindingByJsonp(userId);
 
           if (resData.isBound && resData.staffId) {
+            const nameInput = document.getElementById("inputName");
             const staffInput = document.getElementById("inputStaffId");
+            const nameHint = document.getElementById("nameHint");
             const bindHint = document.getElementById("bindHint");
+
+            if (resData.userName) {
+              nameInput.value = resData.userName;
+              nameInput.disabled = true;
+              nameHint.innerText = "已綁定姓名，下次不用再輸入姓名";
+            }
+
             staffInput.value = resData.staffId;
             staffInput.disabled = true; // 已經綁定，鎖定欄位不可修改
             bindHint.innerText = "已綁定 LINE 帳號，下次不用再輸入員編";
