@@ -61,6 +61,11 @@
         box-sizing: border-box;
         font-size: 16px;
       }
+      input:disabled {
+        background-color: #e9ecef;
+        color: #495057;
+        cursor: not-allowed;
+      }
       button {
         width: 100%;
         padding: 15px;
@@ -144,18 +149,39 @@
           const profile = await liff.getProfile();
           currentUser.userId = profile.userId;
 
-          // UI 渲染
+          // UI 基本渲染
           document.getElementById("userImg").src = profile.pictureUrl;
           document.getElementById("userNameTxt").innerText =
             profile.displayName;
           document.getElementById("inputName").value = profile.displayName;
-          document.getElementById("inputStaffId").value =
-            localStorage.getItem("last_staff_id") || "";
+
+          // 新增：向 GAS 檢查此 LINE ID 是否已經綁定過員工編號
+          document.getElementById("loadingUI").innerText =
+            "正在檢查綁定資料...";
+          await checkBinding(profile.userId);
 
           document.getElementById("loadingUI").style.display = "none";
           document.getElementById("mainUI").style.display = "block";
         } catch (err) {
-          document.getElementById("loadingUI").innerText = "LIFF 初始化失敗";
+          document.getElementById("loadingUI").innerText =
+            "初始化失敗，請重新整理";
+        }
+      }
+
+      // 新增：透過 JSONP 概念或 Fetch 處理跨網域的 GET 查詢
+      async function checkBinding(userId) {
+        try {
+          // 為了繞過 CORS 限制且能順利拿到回傳值，使用 URL 帶參數發送
+          const response = await fetch(`${CONFIG.GAS_URL}?userId=${userId}`);
+          const resData = await response.json();
+
+          if (resData.isBound && resData.staffId) {
+            const staffInput = document.getElementById("inputStaffId");
+            staffInput.value = resData.staffId;
+            staffInput.disabled = true; // 已經綁定，鎖定欄位不可修改
+          }
+        } catch (e) {
+          console.log("無法自動獲取綁定資料，切換為手動輸入模式。");
         }
       }
 
@@ -173,7 +199,6 @@
 
         btn.disabled = true;
         status.innerText = "上傳中...";
-        localStorage.setItem("last_staff_id", staffId);
 
         const data = {
           userId: currentUser.userId,
@@ -183,7 +208,6 @@
         };
 
         try {
-          // 使用 no-cors 是 GAS 聯動最穩定的方式
           await fetch(CONFIG.GAS_URL, {
             method: "POST",
             mode: "no-cors",
