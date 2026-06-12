@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>員工步數上傳系統</title>
+    <script
+      charset="utf-8"
+      src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+    ></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 350px;
+      }
+      h2 {
+        color: #00b900;
+        text-align: center;
+      }
+      .profile {
+        display: flex;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .profile img {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 2px solid #00b900;
+      }
+      .form-item {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+      input:disabled {
+        background-color: #e9ecef;
+        color: #495057;
+        cursor: not-allowed;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        background: #00b900;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      button:disabled {
+        background: #ccc;
+      }
+      #status {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>步數紀錄</h2>
+
+      <div id="loadingUI" style="text-align: center">LINE 載入中...</div>
+
+      <div id="mainUI" style="display: none">
+        <div class="profile">
+          <img id="userImg" src="" alt="" />
+          <div>
+            <div id="userNameTxt" style="font-weight: bold"></div>
+            <div style="font-size: 12px; color: #888">已透過 LINE 驗證</div>
+          </div>
+        </div>
+
+        <div class="form-item">
+          <label>確認姓名</label>
+          <input type="text" id="inputName" />
+        </div>
+
+        <div class="form-item">
+          <label>員工編號</label>
+          <input type="text" id="inputStaffId" placeholder="輸入員編" />
+        </div>
+
+        <div class="form-item">
+          <label>今日步數</label>
+          <input
+            type="number"
+            id="inputSteps"
+            inputmode="numeric"
+            placeholder="請輸入數字"
+          />
+        </div>
+
+        <button id="sendBtn" onclick="handleFormSubmit()">送出紀錄</button>
+        <div id="status"></div>
+      </div>
+    </div>
+
+    <script>
+      // --- 配置資訊 ---
+      const CONFIG = {
+        LIFF_ID: "2009985937-CApNJ6Db",
+        GAS_URL:
+          "https://script.google.com/macros/s/AKfycby16VzBAGQsZhptvHuAit6Snx95p6Wsa8Uo2sAjh6GgfdUWFK-xGuW7YE3kT4LaDz_C/exec",
+      };
+
+      let currentUser = { userId: "" };
+
+      async function init() {
+        try {
+          await liff.init({ liffId: CONFIG.LIFF_ID });
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+          const profile = await liff.getProfile();
+          currentUser.userId = profile.userId;
+
+          // UI 基本渲染
+          document.getElementById("userImg").src = profile.pictureUrl;
+          document.getElementById("userNameTxt").innerText =
+            profile.displayName;
+          document.getElementById("inputName").value = profile.displayName;
+
+          // 新增：向 GAS 檢查此 LINE ID 是否已經綁定過員工編號
+          document.getElementById("loadingUI").innerText =
+            "正在檢查綁定資料...";
+          await checkBinding(profile.userId);
+
+          document.getElementById("loadingUI").style.display = "none";
+          document.getElementById("mainUI").style.display = "block";
+        } catch (err) {
+          document.getElementById("loadingUI").innerText =
+            "初始化失敗，請重新整理";
+        }
+      }
+
+      // 新增：透過 JSONP 概念或 Fetch 處理跨網域的 GET 查詢
+      async function checkBinding(userId) {
+        try {
+          // 為了繞過 CORS 限制且能順利拿到回傳值，使用 URL 帶參數發送
+          const response = await fetch(`${CONFIG.GAS_URL}?userId=${userId}`);
+          const resData = await response.json();
+
+          if (resData.isBound && resData.staffId) {
+            const staffInput = document.getElementById("inputStaffId");
+            staffInput.value = resData.staffId;
+            staffInput.disabled = true; // 已經綁定，鎖定欄位不可修改
+          }
+        } catch (e) {
+          console.log("無法自動獲取綁定資料，切換為手動輸入模式。");
+        }
+      }
+
+      async function handleFormSubmit() {
+        const name = document.getElementById("inputName").value;
+        const staffId = document.getElementById("inputStaffId").value;
+        const steps = document.getElementById("inputSteps").value;
+        const btn = document.getElementById("sendBtn");
+        const status = document.getElementById("status");
+
+        if (!name || !staffId || !steps) {
+          alert("請填寫完整資訊");
+          return;
+        }
+
+        btn.disabled = true;
+        status.innerText = "上傳中...";
+
+        const data = {
+          userId: currentUser.userId,
+          userName: name,
+          staffId: staffId,
+          steps: steps,
+        };
+
+        try {
+          await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          status.innerText = "上傳完成！";
+          alert("感謝提交，祝您健康！");
+          liff.closeWindow();
+        } catch (e) {
+          alert("上傳發生錯誤，請稍後再試");
+          btn.disabled = false;
+          status.innerText = "";
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
