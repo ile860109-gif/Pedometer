@@ -61,6 +61,11 @@
         box-sizing: border-box;
         font-size: 16px;
       }
+      input:disabled {
+        background-color: #e9ecef;
+        color: #495057;
+        cursor: not-allowed;
+      }
       button {
         width: 100%;
         padding: 15px;
@@ -81,6 +86,11 @@
         margin-top: 15px;
         font-size: 14px;
         color: #666;
+      }
+      .hint {
+        color: #6c757d;
+        font-size: 12px;
+        margin-top: 6px;
       }
     </style>
   </head>
@@ -107,6 +117,7 @@
         <div class="form-item">
           <label>員工編號</label>
           <input type="text" id="inputStaffId" placeholder="輸入員編" />
+          <div class="hint" id="bindHint">首次輸入後會自動綁定 LINE 帳號</div>
         </div>
 
         <div class="form-item">
@@ -129,7 +140,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwPTpQRRCR9zUdia075WeJV8Nil-LL4UVxxFxh7Qzy7uvVcdFVo6351rCQMGzmS0j4n/exec",
+          "https://script.google.com/macros/s/AKfycbyOIsRgoHFOomLI33UI-B3s5crNWYuHO9El2T1IMfmI60h1s4JT51R2k3zmyOKmGPx0/exec",
       };
 
       let currentUser = { userId: "" };
@@ -144,25 +155,75 @@
           const profile = await liff.getProfile();
           currentUser.userId = profile.userId;
 
-          // UI 渲染
+          // UI 基本渲染
           document.getElementById("userImg").src = profile.pictureUrl;
           document.getElementById("userNameTxt").innerText =
             profile.displayName;
           document.getElementById("inputName").value = profile.displayName;
-          document.getElementById("inputStaffId").value =
-            localStorage.getItem("last_staff_id") || "";
+
+          // 新增：向 GAS 檢查此 LINE ID 是否已經綁定過員工編號
+          document.getElementById("loadingUI").innerText =
+            "正在檢查綁定資料...";
+          await checkBinding(profile.userId);
 
           document.getElementById("loadingUI").style.display = "none";
           document.getElementById("mainUI").style.display = "block";
         } catch (err) {
-          document.getElementById("loadingUI").innerText = "LIFF 初始化失敗";
+          document.getElementById("loadingUI").innerText =
+            "初始化失敗，請重新整理";
         }
       }
 
+      // 新增：透過 JSONP 查詢，避免 Apps Script GET 被 CORS 擋下
+      async function checkBinding(userId) {
+        try {
+          const resData = await getBindingByJsonp(userId);
+
+          if (resData.isBound && resData.staffId) {
+            const staffInput = document.getElementById("inputStaffId");
+            const bindHint = document.getElementById("bindHint");
+            staffInput.value = resData.staffId;
+            staffInput.disabled = true; // 已經綁定，鎖定欄位不可修改
+            bindHint.innerText = "已綁定 LINE 帳號，下次不用再輸入員編";
+          }
+        } catch (e) {
+          console.log("無法自動獲取綁定資料，切換為手動輸入模式。");
+        }
+      }
+
+      function getBindingByJsonp(userId) {
+        return new Promise((resolve, reject) => {
+          const callbackName =
+            "handleBinding_" +
+            Date.now() +
+            "_" +
+            Math.floor(Math.random() * 10000);
+          const script = document.createElement("script");
+          const cleanup = () => {
+            delete window[callbackName];
+            script.remove();
+          };
+
+          window[callbackName] = (data) => {
+            cleanup();
+            resolve(data);
+          };
+
+          script.onerror = () => {
+            cleanup();
+            reject(new Error("綁定資料查詢失敗"));
+          };
+          script.src = `${CONFIG.GAS_URL}?userId=${encodeURIComponent(
+            userId,
+          )}&callback=${encodeURIComponent(callbackName)}`;
+          document.body.appendChild(script);
+        });
+      }
+
       async function handleFormSubmit() {
-        const name = document.getElementById("inputName").value;
-        const staffId = document.getElementById("inputStaffId").value;
-        const steps = document.getElementById("inputSteps").value;
+        const name = document.getElementById("inputName").value.trim();
+        const staffId = document.getElementById("inputStaffId").value.trim();
+        const steps = document.getElementById("inputSteps").value.trim();
         const btn = document.getElementById("sendBtn");
         const status = document.getElementById("status");
 
@@ -173,7 +234,6 @@
 
         btn.disabled = true;
         status.innerText = "上傳中...";
-        localStorage.setItem("last_staff_id", staffId);
 
         const data = {
           userId: currentUser.userId,
@@ -183,7 +243,6 @@
         };
 
         try {
-          // 使用 no-cors 是 GAS 聯動最穩定的方式
           await fetch(CONFIG.GAS_URL, {
             method: "POST",
             mode: "no-cors",
