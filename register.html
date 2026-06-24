@@ -3,11 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>員工步數上傳系統</title>
-    <script
-      charset="utf-8"
-      src="https://static.line-scdn.net/liff/edge/2/sdk.js"
-    ></script>
+    <title>員工會員註冊</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -33,9 +30,16 @@
         box-shadow: 0 4px 18px rgba(25, 35, 45, 0.08);
       }
       h1 {
-        margin: 0 0 22px;
+        margin: 0 0 8px;
         color: #087f5b;
         font-size: 24px;
+        text-align: center;
+      }
+      .subtitle {
+        margin: 0 0 22px;
+        color: #687078;
+        font-size: 14px;
+        line-height: 1.6;
         text-align: center;
       }
       .profile {
@@ -60,25 +64,13 @@
       }
       .profile-note,
       .hint {
-        margin-top: 3px;
+        margin-top: 4px;
         color: #687078;
         font-size: 12px;
+        line-height: 1.5;
       }
-      .member-info {
-        margin-bottom: 18px;
-        padding: 12px 0;
-        border-top: 1px solid #edf0f2;
-        border-bottom: 1px solid #edf0f2;
-      }
-      .info-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 5px 0;
-        font-size: 14px;
-      }
-      .info-label {
-        color: #687078;
+      .form-item {
+        margin-bottom: 16px;
       }
       label {
         display: block;
@@ -92,7 +84,7 @@
         padding: 11px 12px;
         border: 1px solid #cbd2d8;
         border-radius: 6px;
-        font-size: 18px;
+        font-size: 16px;
       }
       input:focus {
         border-color: #087f5b;
@@ -102,7 +94,7 @@
       .button-link {
         width: 100%;
         min-height: 48px;
-        margin-top: 16px;
+        margin-top: 8px;
         padding: 13px 16px;
         display: inline-flex;
         justify-content: center;
@@ -130,10 +122,19 @@
         font-weight: 700;
       }
       .state-text {
-        margin: 0;
+        margin: 0 0 14px;
         color: #687078;
         font-size: 14px;
         line-height: 1.7;
+      }
+      .review-note {
+        margin-bottom: 16px;
+        padding: 10px 12px;
+        border-left: 3px solid #d9480f;
+        background: #fff4e6;
+        color: #8f3b13;
+        font-size: 13px;
+        line-height: 1.6;
       }
       #status {
         min-height: 20px;
@@ -149,57 +150,48 @@
   </head>
   <body>
     <main class="panel">
-      <h1>步數紀錄</h1>
+      <h1>會員註冊</h1>
+      <p class="subtitle">送出資料後，需由後台人員審核通過才能輸入步數。</p>
 
       <div id="loadingUI" class="state">
         <div class="state-title">LINE 登入中</div>
-        <p class="state-text">正在檢查會員資格...</p>
+        <p class="state-text">正在取得會員資料...</p>
       </div>
 
       <section id="pendingUI" class="state" hidden>
-        <div class="state-title">會員資料審核中</div>
-        <p class="state-text">後台人員審核通過後，即可在此輸入步數。</p>
+        <div class="state-title">申請已送出</div>
+        <p class="state-text">目前正在等待後台人員審核，通過後即可使用計步功能。</p>
       </section>
 
-      <section id="rejectedUI" class="state" hidden>
-        <div class="state-title">會員申請未通過</div>
-        <p id="reviewNote" class="state-text"></p>
-        <a class="button-link" href="register.html">重新申請</a>
+      <section id="approvedUI" class="state" hidden>
+        <div class="state-title">您已通過審核</div>
+        <p class="state-text">會員身份已啟用，可以前往輸入今日步數。</p>
+        <a class="button-link" href="index.html">前往輸入步數</a>
       </section>
 
-      <section id="mainUI" hidden>
+      <section id="formUI" hidden>
         <div class="profile">
           <img id="userImg" src="" alt="LINE 個人照片" />
           <div>
             <div id="lineDisplayName" class="profile-name"></div>
-            <div class="profile-note">已通過會員審核</div>
+            <div class="profile-note">LINE ID 已自動取得</div>
           </div>
         </div>
 
-        <div class="member-info">
-          <div class="info-row">
-            <span class="info-label">姓名</span>
-            <strong id="memberName"></strong>
-          </div>
-          <div class="info-row">
-            <span class="info-label">員工編號</span>
-            <strong id="memberStaffId"></strong>
-          </div>
+        <div id="reviewNote" class="review-note" hidden></div>
+
+        <div class="form-item">
+          <label for="inputStaffId">員工編號</label>
+          <input
+            type="text"
+            id="inputStaffId"
+            autocomplete="off"
+            placeholder="請輸入員工編號"
+          />
+          <div class="hint">後台人員會依此資料確認您的員工身份。</div>
         </div>
 
-        <label for="inputSteps">今日步數</label>
-        <input
-          type="number"
-          id="inputSteps"
-          inputmode="numeric"
-          min="1"
-          step="1"
-          placeholder="請輸入步數"
-        />
-
-        <button id="sendBtn" type="button" onclick="handleFormSubmit()">
-          送出紀錄
-        </button>
+        <button id="registerBtn" type="button" onclick="handleRegister()">送出審核</button>
         <div id="status" aria-live="polite"></div>
       </section>
     </main>
@@ -208,10 +200,10 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwEwPx8pg9EBiaXKGCa-ITEAqyrVpSiKKYp0TGmYkmgonhvAI2liPMOrpVEcFxM0MdU/exec",
+          "https://script.google.com/macros/s/AKfycbwc4Uo5kFcxBqtTMmWkW99fKwt6OgzsH6LsQnqnDnZzgba7pjaTxH4DIn_HNDxl2e6E/exec",
       };
 
-      let currentUserId = "";
+      let currentProfile = null;
 
       async function init() {
         try {
@@ -221,46 +213,86 @@
             return;
           }
 
-          const profile = await liff.getProfile();
-          currentUserId = profile.userId;
-          const member = await getMemberStatus(profile.userId);
-
+          currentProfile = await liff.getProfile();
+          const member = await getMemberStatus(currentProfile.userId);
           document.getElementById("loadingUI").hidden = true;
 
-          if (!member.isRegistered) {
-            window.location.replace("register.html");
+          if (member.isApproved) {
+            document.getElementById("approvedUI").hidden = false;
             return;
           }
 
-          if (!member.isApproved) {
-            showReviewState(member);
+          if (member.status === "待審核") {
+            document.getElementById("pendingUI").hidden = false;
             return;
           }
 
-          document.getElementById("userImg").src = profile.pictureUrl || "";
-          document.getElementById("lineDisplayName").innerText =
-            profile.displayName;
-          document.getElementById("memberName").innerText =
-            member.userName || profile.displayName;
-          document.getElementById("memberStaffId").innerText = member.staffId;
-          document.getElementById("mainUI").hidden = false;
+          showRegistrationForm(member);
         } catch (err) {
           const loadingUI = document.getElementById("loadingUI");
           loadingUI.querySelector(".state-title").innerText = "載入失敗";
-          loadingUI.querySelector(".state-text").innerText =
-            "請重新開啟頁面後再試。";
+          loadingUI.querySelector(".state-text").innerText = "請重新開啟頁面後再試。";
         }
       }
 
-      function showReviewState(member) {
+      function showRegistrationForm(member) {
+        document.getElementById("userImg").src = currentProfile.pictureUrl || "";
+        document.getElementById("lineDisplayName").innerText = currentProfile.displayName;
+        document.getElementById("inputStaffId").value = member.staffId || "";
+
         if (member.status === "已拒絕") {
-          document.getElementById("reviewNote").innerText =
-            member.reviewNote || "請確認員工編號後重新提出申請。";
-          document.getElementById("rejectedUI").hidden = false;
+          const reviewNote = document.getElementById("reviewNote");
+          reviewNote.innerText =
+            "上次申請未通過：" +
+            (member.reviewNote || "請確認資料是否正確後重新申請。");
+          reviewNote.hidden = false;
+        }
+
+        document.getElementById("formUI").hidden = false;
+      }
+
+      async function handleRegister() {
+        const staffIdInput = document.getElementById("inputStaffId");
+        const staffId = staffIdInput.value.trim();
+        const button = document.getElementById("registerBtn");
+        const status = document.getElementById("status");
+
+        if (!staffId) {
+          alert("請填寫員工編號");
+          staffIdInput.focus();
           return;
         }
 
-        document.getElementById("pendingUI").hidden = false;
+        button.disabled = true;
+        status.innerText = "申請送出中...";
+
+        try {
+          await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "register",
+              userId: currentProfile.userId,
+              userName: currentProfile.displayName,
+              staffId,
+            }),
+          });
+
+          await wait(1200);
+          const member = await getMemberStatus(currentProfile.userId);
+
+          if (!member.isRegistered) {
+            throw new Error("申請資料未建立");
+          }
+
+          document.getElementById("formUI").hidden = true;
+          document.getElementById("pendingUI").hidden = false;
+        } catch (err) {
+          button.disabled = false;
+          status.innerText = "";
+          alert("申請送出失敗，請確認員工編號或稍後再試");
+        }
       }
 
       async function getMemberStatus(userId) {
@@ -273,10 +305,7 @@
       function jsonpRequest(params) {
         return new Promise((resolve, reject) => {
           const callbackName =
-            "handleResponse_" +
-            Date.now() +
-            "_" +
-            Math.floor(Math.random() * 10000);
+            "handleResponse_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
           const script = document.createElement("script");
           const timeoutId = window.setTimeout(() => {
             cleanup();
@@ -308,41 +337,8 @@
         });
       }
 
-      async function handleFormSubmit() {
-        const stepsInput = document.getElementById("inputSteps");
-        const steps = Number(stepsInput.value);
-        const button = document.getElementById("sendBtn");
-        const status = document.getElementById("status");
-
-        if (!Number.isInteger(steps) || steps <= 0) {
-          alert("請輸入大於 0 的整數步數");
-          stepsInput.focus();
-          return;
-        }
-
-        button.disabled = true;
-        status.innerText = "上傳中...";
-
-        try {
-          await fetch(CONFIG.GAS_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-              action: "submitSteps",
-              userId: currentUserId,
-              steps,
-            }),
-          });
-
-          status.innerText = "上傳完成";
-          alert("步數已送出，謝謝您的紀錄！");
-          liff.closeWindow();
-        } catch (err) {
-          status.innerText = "";
-          button.disabled = false;
-          alert("上傳失敗，請稍後再試");
-        }
+      function wait(milliseconds) {
+        return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
       }
 
       init();
