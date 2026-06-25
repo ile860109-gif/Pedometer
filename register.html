@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>員工會員註冊</title>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script
+      charset="utf-8"
+      src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+    ></script>
     <style>
       * {
         box-sizing: border-box;
@@ -160,7 +163,9 @@
 
       <section id="pendingUI" class="state" hidden>
         <div class="state-title">申請已送出</div>
-        <p class="state-text">目前正在等待後台人員審核，通過後即可使用計步功能。</p>
+        <p class="state-text">
+          目前正在等待後台人員審核，通過後即可使用計步功能。
+        </p>
       </section>
 
       <section id="approvedUI" class="state" hidden>
@@ -191,7 +196,9 @@
           <div class="hint">後台人員會依此資料確認您的員工身份。</div>
         </div>
 
-        <button id="registerBtn" type="button" onclick="handleRegister()">送出審核</button>
+        <button id="registerBtn" type="button" onclick="handleRegister()">
+          送出審核
+        </button>
         <div id="status" aria-live="polite"></div>
       </section>
     </main>
@@ -200,7 +207,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwEwPx8pg9EBiaXKGCa-ITEAqyrVpSiKKYp0TGmYkmgonhvAI2liPMOrpVEcFxM0MdU/exec",
+          "https://script.google.com/macros/s/AKfycby_kRGkE1SJR420-YRfzY2pnwj2BIhrtrwK3xWKpYrmfuMJ0uO0I7tbYxs10PTgnRWn/exec",
       };
 
       let currentProfile = null;
@@ -231,13 +238,16 @@
         } catch (err) {
           const loadingUI = document.getElementById("loadingUI");
           loadingUI.querySelector(".state-title").innerText = "載入失敗";
-          loadingUI.querySelector(".state-text").innerText = "請重新開啟頁面後再試。";
+          loadingUI.querySelector(".state-text").innerText =
+            "請重新開啟頁面後再試。";
         }
       }
 
       function showRegistrationForm(member) {
-        document.getElementById("userImg").src = currentProfile.pictureUrl || "";
-        document.getElementById("lineDisplayName").innerText = currentProfile.displayName;
+        document.getElementById("userImg").src =
+          currentProfile.pictureUrl || "";
+        document.getElementById("lineDisplayName").innerText =
+          currentProfile.displayName;
         document.getElementById("inputStaffId").value = member.staffId || "";
 
         if (member.status === "已拒絕") {
@@ -305,7 +315,10 @@
       function jsonpRequest(params) {
         return new Promise((resolve, reject) => {
           const callbackName =
-            "handleResponse_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+            "handleResponse_" +
+            Date.now() +
+            "_" +
+            Math.floor(Math.random() * 10000);
           const script = document.createElement("script");
           const timeoutId = window.setTimeout(() => {
             cleanup();
@@ -338,7 +351,9 @@
       }
 
       function wait(milliseconds) {
-        return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+        return new Promise((resolve) =>
+          window.setTimeout(resolve, milliseconds),
+        );
       }
 
       init();
