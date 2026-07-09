@@ -186,6 +186,16 @@
         <div id="reviewNote" class="review-note" hidden></div>
 
         <div class="form-item">
+          <label for="inputUserName">中文姓名</label>
+          <input
+            type="text"
+            id="inputUserName"
+            autocomplete="name"
+            placeholder="請輸入中文姓名"
+          />
+        </div>
+
+        <div class="form-item">
           <label for="inputStaffId">員工編號</label>
           <input
             type="text"
@@ -207,7 +217,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbzTJo9Ch6aqMFtLU_Xjka6MeOkj1r1w10htCwEWucKH3nBcdtZo_1CqWz6qOIz4ZBAP/exec",
+          "https://script.google.com/macros/s/AKfycbz_RB4Wulek4sLD9OhkSqG_TWp4CgonIBenSiizP5uXOoqofC79o5papAfbn1XyMqC5/exec",
       };
 
       let currentProfile = null;
@@ -248,6 +258,7 @@
           currentProfile.pictureUrl || "";
         document.getElementById("lineDisplayName").innerText =
           currentProfile.displayName;
+        document.getElementById("inputUserName").value = member.userName || "";
         document.getElementById("inputStaffId").value = member.staffId || "";
 
         if (member.status === "已拒絕") {
@@ -262,10 +273,18 @@
       }
 
       async function handleRegister() {
+        const userNameInput = document.getElementById("inputUserName");
         const staffIdInput = document.getElementById("inputStaffId");
+        const userName = userNameInput.value.trim();
         const staffId = staffIdInput.value.trim();
         const button = document.getElementById("registerBtn");
         const status = document.getElementById("status");
+
+        if (!userName) {
+          alert("請填寫中文姓名");
+          userNameInput.focus();
+          return;
+        }
 
         if (!staffId) {
           alert("請填寫員工編號");
@@ -284,7 +303,7 @@
             body: JSON.stringify({
               action: "register",
               userId: currentProfile.userId,
-              userName: currentProfile.displayName,
+              userName,
               staffId,
             }),
           });
