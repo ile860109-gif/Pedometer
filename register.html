@@ -154,7 +154,7 @@
   <body>
     <main class="panel">
       <h1>會員註冊</h1>
-      <p class="subtitle">送出資料後，需由後台人員審核通過才能輸入步數。</p>
+      <p class="subtitle">送出資料後，待審核通過才能輸入步數。</p>
 
       <div id="loadingUI" class="state">
         <div class="state-title">LINE 登入中</div>
@@ -163,9 +163,7 @@
 
       <section id="pendingUI" class="state" hidden>
         <div class="state-title">申請已送出</div>
-        <p class="state-text">
-          目前正在等待後台人員確認，通過後即可使用計步功能。
-        </p>
+        <p class="state-text">目前正在等待系統確認，通過後即可使用計步功能。</p>
       </section>
 
       <section id="approvedUI" class="state" hidden>
@@ -203,7 +201,7 @@
             autocomplete="off"
             placeholder="請輸入員工編號"
           />
-          <div class="hint">後台人員會依此資料確認您的員工身份。</div>
+          <div class="hint">系統會依此資料確認您的員工身份。</div>
         </div>
 
         <button id="registerBtn" type="button" onclick="handleRegister()">
@@ -264,7 +262,7 @@
         if (member.status === "已拒絕") {
           const reviewNote = document.getElementById("reviewNote");
           reviewNote.innerText =
-            "上次申請未通過：" +
+            "申請未通過：" +
             (member.reviewNote || "請確認資料是否正確後重新申請。");
           reviewNote.hidden = false;
         } else {
