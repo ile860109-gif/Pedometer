@@ -164,7 +164,7 @@
       <section id="pendingUI" class="state" hidden>
         <div class="state-title">申請已送出</div>
         <p class="state-text">
-          目前正在等待後台人員審核，通過後即可使用計步功能。
+          目前正在等待後台人員確認，通過後即可使用計步功能。
         </p>
       </section>
 
@@ -217,7 +217,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbz_RB4Wulek4sLD9OhkSqG_TWp4CgonIBenSiizP5uXOoqofC79o5papAfbn1XyMqC5/exec",
+          "https://script.google.com/macros/s/AKfycbwZ_dE6wl94dvFHF85Zi03Ejw6w2Zl1-UyT_bfJNjx1lc571whU9kgN6bA6BYi41Vs5/exec",
       };
 
       let currentProfile = null;
@@ -267,6 +267,10 @@
             "上次申請未通過：" +
             (member.reviewNote || "請確認資料是否正確後重新申請。");
           reviewNote.hidden = false;
+        } else {
+          const reviewNote = document.getElementById("reviewNote");
+          reviewNote.innerText = "";
+          reviewNote.hidden = true;
         }
 
         document.getElementById("formUI").hidden = false;
@@ -313,6 +317,19 @@
 
           if (!member.isRegistered) {
             throw new Error("申請資料未建立");
+          }
+
+          if (member.isApproved) {
+            document.getElementById("formUI").hidden = true;
+            document.getElementById("approvedUI").hidden = false;
+            return;
+          }
+
+          if (member.status === "已拒絕") {
+            button.disabled = false;
+            status.innerText = "";
+            showRegistrationForm(member);
+            return;
           }
 
           document.getElementById("formUI").hidden = true;
