@@ -215,7 +215,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbyF3dRRNY69qlnZnLZVppYc0EV31H38P2Y2vhE0Kr2WJ7yfjBn-TGN58QAX_fMf3Xax/exec",
+          "https://script.google.com/macros/s/AKfycbz_C4FfFTV9P5LwPuLMrexXmCny0yCy6VVlxoH9UNvhrkC4u7dc4lduZjNV21PYdzfF/exec",
       };
 
       let currentProfile = null;
@@ -230,6 +230,9 @@
 
           currentProfile = await liff.getProfile();
           const member = await getMemberStatus(currentProfile.userId);
+          if (member.error) {
+            throw new Error(member.error);
+          }
           document.getElementById("loadingUI").hidden = true;
 
           if (member.isApproved) {
@@ -312,6 +315,10 @@
 
           await wait(1200);
           const member = await getMemberStatus(currentProfile.userId);
+
+          if (member.error) {
+            throw new Error(member.error);
+          }
 
           if (!member.isRegistered) {
             throw new Error("申請資料未建立");

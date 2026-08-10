@@ -210,6 +210,10 @@
             <strong id="memberName"></strong>
           </div>
           <div class="info-row">
+            <span class="info-label">英文姓名</span>
+            <strong id="memberEnglishName"></strong>
+          </div>
+          <div class="info-row">
             <span class="info-label">員工編號</span>
             <strong id="memberStaffId"></strong>
           </div>
@@ -253,7 +257,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwuIHVixEWkOsUl9a7bFhbf5oqG2roSheN0sWXwSmS_VXK0fbLEvPUCEVP4V-hImwgV/exec",
+          "https://script.google.com/macros/s/AKfycbz_C4FfFTV9P5LwPuLMrexXmCny0yCy6VVlxoH9UNvhrkC4u7dc4lduZjNV21PYdzfF/exec",
       };
 
       let currentUserId = "";
@@ -270,6 +274,10 @@
           const profile = await liff.getProfile();
           currentUserId = profile.userId;
           const member = await getMemberStatus(profile.userId);
+
+          if (member.error) {
+            throw new Error(member.error);
+          }
 
           document.getElementById("loadingUI").hidden = true;
 
@@ -288,6 +296,8 @@
             profile.displayName;
           document.getElementById("memberName").innerText =
             member.userName || profile.displayName;
+          document.getElementById("memberEnglishName").innerText =
+            member.englishName || "";
           document.getElementById("memberStaffId").innerText = member.staffId;
           document.getElementById("mainUI").hidden = false;
         } catch (err) {
