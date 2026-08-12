@@ -313,11 +313,12 @@
             }),
           });
 
-          await wait(1200);
-          const member = await getMemberStatus(currentProfile.userId);
+          const member = await waitForRegistrationResult(
+            currentProfile.userId,
+          );
 
-          if (member.error) {
-            throw new Error(member.error);
+          if (member.result === "error" || member.error) {
+            throw new Error(member.message || member.error);
           }
 
           if (!member.isRegistered) {
@@ -342,8 +343,32 @@
         } catch (err) {
           button.disabled = false;
           status.innerText = "";
-          alert("申請送出失敗，請確認員工編號或稍後再試");
+          alert(
+            err.message === "STATUS_CHECK_FAILED"
+              ? "申請可能已送出，但目前無法確認結果，請重新開啟頁面查看。"
+              : "申請送出失敗，請確認員工編號或稍後再試",
+          );
         }
+      }
+
+      async function waitForRegistrationResult(userId) {
+        const delays = [1200, 1500, 2500];
+        let lastError = null;
+
+        for (const delay of delays) {
+          await wait(delay);
+
+          try {
+            const member = await getMemberStatus(userId);
+            if (member.isRegistered || member.result === "error" || member.error) {
+              return member;
+            }
+          } catch (err) {
+            lastError = err;
+          }
+        }
+
+        throw new Error(lastError ? "STATUS_CHECK_FAILED" : "申請資料未建立");
       }
 
       async function getMemberStatus(userId) {
@@ -385,6 +410,7 @@
           const query = new URLSearchParams({
             ...params,
             callback: callbackName,
+            _: Date.now().toString(),
           });
           script.src = `${CONFIG.GAS_URL}?${query.toString()}`;
           document.body.appendChild(script);
