@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>排行榜</title>
     <script
       charset="utf-8"
@@ -172,12 +178,14 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbyaCLzyNr364MWB_73yQTje85AF4ZMBgvoHYvkD8z-MBm-QovA2ju8Q5QiVH7fsJJ5N/exec",
+          "https://script.google.com/macros/s/AKfycbzjESsB3y5pRPMXGkdUB0kNN3KrpJz7IiiwWapqqeLiw7Cl_ziu5jLvAomdIQYNc9Kd/exec",
       };
 
       let currentUserId = "";
       let currentType = "steps";
       const rankingCache = {};
+      const rankingRequests = {};
+      let hiddenAt = 0;
 
       async function init() {
         try {
@@ -191,7 +199,7 @@
           currentUserId = profile.userId;
           await loadRanking(currentType);
         } catch (err) {
-          showState("排行榜載入失敗，請重新開啟頁面後再試。");
+          showState("LINE 登入或初始化失敗，請關閉頁面後重新開啟。");
         }
       }
 
@@ -218,13 +226,7 @@
         showState("正在載入排行榜...");
 
         try {
-          const data =
-            rankingCache[type] ||
-            (await jsonpRequest({
-              action: "rankings",
-              type,
-              userId: currentUserId,
-            }));
+          const data = rankingCache[type] || (await requestRanking(type));
 
           if (data.result !== "success") {
             throw new Error(data.message || "排行榜讀取失敗");
@@ -237,6 +239,30 @@
           renderRanking(data.items || []);
         } catch (err) {
           showState(err.message || "排行榜讀取失敗，請稍後再試。");
+        }
+      }
+
+      function requestRanking(type) {
+        if (rankingRequests[type]) {
+          return rankingRequests[type];
+        }
+
+        rankingRequests[type] = jsonpRequestWithRetry({
+          action: "rankings",
+          type,
+          userId: currentUserId,
+        }).finally(() => {
+          delete rankingRequests[type];
+        });
+        return rankingRequests[type];
+      }
+
+      async function jsonpRequestWithRetry(params) {
+        try {
+          return await jsonpRequest(params);
+        } catch (firstError) {
+          await wait(800);
+          return jsonpRequest(params);
         }
       }
 
@@ -298,7 +324,7 @@
           const timeoutId = window.setTimeout(() => {
             cleanup();
             reject(new Error("排行榜查詢逾時"));
-          }, 10000);
+          }, 20000);
 
           function cleanup() {
             window.clearTimeout(timeoutId);
@@ -318,11 +344,32 @@
           const query = new URLSearchParams({
             ...params,
             callback: callbackName,
+            _: Date.now(),
           });
           script.src = `${CONFIG.GAS_URL}?${query.toString()}`;
           document.body.appendChild(script);
         });
       }
+
+      function wait(milliseconds) {
+        return new Promise((resolve) =>
+          window.setTimeout(resolve, milliseconds),
+        );
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          hiddenAt = Date.now();
+          return;
+        }
+
+        if (hiddenAt && Date.now() - hiddenAt >= 60000 && currentUserId) {
+          delete rankingCache.steps;
+          delete rankingCache.count;
+          loadRanking(currentType);
+        }
+        hiddenAt = 0;
+      });
 
       init();
     </script>
