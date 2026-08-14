@@ -215,7 +215,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbzjESsB3y5pRPMXGkdUB0kNN3KrpJz7IiiwWapqqeLiw7Cl_ziu5jLvAomdIQYNc9Kd/exec",
+          "https://script.google.com/macros/s/AKfycbw3pCQ1h9WuENQJravQSzIp--d1Co-5v-d15C-5AA2Yu7udt2m-lpU1l4BgxmOjTO9Y/exec",
       };
 
       let currentProfile = null;
@@ -313,9 +313,7 @@
             }),
           });
 
-          const member = await waitForRegistrationResult(
-            currentProfile.userId,
-          );
+          const member = await waitForRegistrationResult(currentProfile.userId);
 
           if (member.result === "error" || member.error) {
             throw new Error(member.message || member.error);
@@ -360,7 +358,11 @@
 
           try {
             const member = await getMemberStatus(userId);
-            if (member.isRegistered || member.result === "error" || member.error) {
+            if (
+              member.isRegistered ||
+              member.result === "error" ||
+              member.error
+            ) {
               return member;
             }
           } catch (err) {
