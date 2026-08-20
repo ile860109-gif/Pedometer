@@ -165,11 +165,11 @@
           aria-selected="false"
           onclick="selectRanking('count')"
         >
-          輸入次數排名
+          達標次數排名
         </button>
       </div>
 
-      <div id="metricLabel" class="metric-label">總步數</div>
+      <div id="metricLabel" class="metric-label">當月總步數</div>
       <div id="rankingList" class="ranking-list"></div>
       <div id="state" class="state">正在載入排行榜...</div>
     </main>
@@ -178,7 +178,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwQkn9x45jHxKdxMa0QdjMDOAJvgbo8yxld83FsTB2a6dgwJMfQ47WvGseS0Vozlpms/exec",
+          "https://script.google.com/macros/s/AKfycbznV1ruXn_XsZ4Iwb0nV5B7DAsfAD2c8X3IFQmafK_iUevU_qDu4wK62dB59hPbdnsh/exec",
       };
 
       let currentUserId = "";
@@ -216,7 +216,7 @@
           .getElementById("countTab")
           .setAttribute("aria-selected", String(type === "count"));
         document.getElementById("metricLabel").textContent =
-          type === "steps" ? "總步數" : "輸入次數";
+          type === "steps" ? "當月總步數" : "當月達標次數";
 
         await loadRanking(type);
       }
