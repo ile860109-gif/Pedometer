@@ -86,6 +86,23 @@
         font-size: 14px;
         font-weight: 700;
       }
+      .field-label-row {
+        margin-bottom: 7px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .field-label-row label {
+        margin-bottom: 0;
+      }
+      .step-goal {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.4;
+        text-align: right;
+      }
       input {
         width: 100%;
         min-height: 48px;
@@ -219,7 +236,10 @@
           </div>
         </div>
 
-        <label for="inputSteps">今日步數</label>
+        <div class="field-label-row">
+          <label for="inputSteps">今日步數</label>
+          <span class="step-goal">目標平均每日6,000步</span>
+        </div>
         <input
           type="number"
           id="inputSteps"
