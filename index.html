@@ -96,6 +96,14 @@
       .field-label-row label {
         margin-bottom: 0;
       }
+      .field-label-subrow {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 700;
+      }
       .step-goal {
         color: #087f5b;
         font-size: 12px;
@@ -237,11 +245,12 @@
         </div>
 
         <div class="field-label-row">
-          <label for="inputSteps">
-            今日步數 <br />
-            (Langkah Hari Ini)
-          </label>
+          <label for="inputSteps">今日步數</label>
+
+          <div class="field-label-subrow">
+            <span>(Langkah Hari Ini)</span>          
           <span class="step-goal">目標平均每日6,000步</span>
+          </div>
         </div>
         <input
           type="number"
