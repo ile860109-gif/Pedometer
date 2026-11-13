@@ -110,6 +110,12 @@
         white-space: nowrap;
         flex-shrink: 0;
       }
+      .step-date-rule {
+        margin: 6px 0 0;
+        color: #687078;
+        font-size: 12px;
+        line-height: 1.5;
+      }
       input {
         width: 100%;
         min-height: 48px;
@@ -259,6 +265,9 @@
           step="1"
           placeholder="請輸入步數"
         />
+        <p class="step-date-rule">
+          每日 00:00 至 08:00 送達的紀錄計入前一天，08:01 起計入當天。
+        </p>
 
         <div class="image-field">
           <div class="field-label-row">
@@ -295,7 +304,7 @@
       const CONFIG = {
         LIFF_ID: "2009985937-CApNJ6Db",
         GAS_URL:
-          "https://script.google.com/macros/s/AKfycbwhLJeXx_I8MezWFHv5nuLVLM1CP6BucfaAZRJthZhZpo5zaYZsvzWQc_Oo8hTm8nSX/exec",
+          "https://script.google.com/macros/s/AKfycbzuVyEamo9MB8JpPUBL6N_ezzPTgTUZZB50ThgRaEE371rszv0y2gbZQ8Wf7n7xEpXV/exec",
       };
 
       let currentUserId = "";
